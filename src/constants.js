@@ -9,6 +9,12 @@ exports.ExitCode = {
   SUCCESS: 0,
 };
 
+exports.DataFileName = {
+  titles: `data/titles.txt`,
+  categories: `data/categories.txt`,
+  sentences: `data/sentences.txt`,
+};
+
 exports.HELP_MESSAGE = `
 Программа запускает http-сервер и формирует файл с данными для API.
 
