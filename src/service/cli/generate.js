@@ -4,14 +4,16 @@ const fs = require(`fs`).promises;
 const {
   ExitCode,
   MOCKS_FILE_NAME,
-  MAX_ANNOUNCE_SIZE,
-  MAX_FULL_DESCR_SIZE,
   MAX_PUBLICATION_AMOUNT,
   DEFAULT_PUBLICATION_AMOUNT,
   DataFileName,
+  MAX_ID_LENGTH,
+  CommentRestrict,
+  ArticleRestrict,
 } = require(`../../constants`);
 const chalk = require(`chalk`);
-const {getRandomInt, shuffle, readContent} = require(`../../utils`);
+const {nanoid} = require(`nanoid`);
+const {getRandomInt, shuffle, readContent, formatDate} = require(`../../utils`);
 
 const getCreatedDate = () => {
   const currentDate = new Date();
@@ -23,7 +25,22 @@ const getCreatedDate = () => {
       maxMilliseconds
   );
 
-  return new Date(createdDateMilliseconds).toLocaleString();
+  const date = new Date(createdDateMilliseconds);
+
+  return formatDate(date);
+};
+
+const generateCommentList = (commentsAmount, comments) => {
+  return Array(commentsAmount)
+    .fill({}, 0, commentsAmount)
+    .map(() => {
+      return {
+        id: nanoid(MAX_ID_LENGTH),
+        text: shuffle(comments)
+          .slice(0, getRandomInt(1, CommentRestrict.MAX_SENTENCES_AMOUNT))
+          .join(` `),
+      };
+    });
 };
 
 const generateAd = (amount, data) => {
@@ -31,17 +48,22 @@ const generateAd = (amount, data) => {
     .fill(0, 0, amount)
     .map(() => {
       return {
+        id: nanoid(MAX_ID_LENGTH),
         title: data.titles[getRandomInt(0, data.titles.length - 1)],
         announce: shuffle(data.sentences)
-          .slice(0, getRandomInt(1, MAX_ANNOUNCE_SIZE))
+          .slice(0, getRandomInt(1, ArticleRestrict.MAX_ANNOUNCE_SIZE))
           .join(` `),
         fullText: shuffle(data.sentences)
-          .slice(0, getRandomInt(1, MAX_FULL_DESCR_SIZE))
+          .slice(0, getRandomInt(1, ArticleRestrict.MAX_FULL_DESCR_SIZE))
           .join(` `),
         createdDate: getCreatedDate(),
-        сategory: shuffle(data.categories).slice(
+        category: shuffle(data.categories).slice(
             0,
-            getRandomInt(1, data.categories.length)
+            getRandomInt(1, ArticleRestrict.MAX_CATEGORY_AMOUND)
+        ),
+        comments: generateCommentList(
+            getRandomInt(1, CommentRestrict.MAX_COMMENTS_AMOUNT),
+            data.comments
         ),
       };
     });
@@ -52,7 +74,7 @@ module.exports = {
   run: async (args) => {
     let count = Number.parseInt(args[0], 10);
 
-    const [titles, categories, sentences] = await Promise.all(
+    const [titles, categories, sentences, comments] = await Promise.all(
         Object.values(DataFileName).map((fileName) => readContent(fileName))
     );
 
@@ -63,14 +85,16 @@ module.exports = {
 
     count = !count || count <= 0 ? DEFAULT_PUBLICATION_AMOUNT : count;
 
-    const data = JSON.stringify(generateAd(count, {titles, categories, sentences}));
+    const data = JSON.stringify(
+        generateAd(count, {titles, categories, sentences, comments})
+    );
 
     try {
       await fs.writeFile(MOCKS_FILE_NAME, data);
       console.log(chalk.green(`Файл успешно создан`));
       process.exit(ExitCode.SUCCESS);
     } catch (error) {
-      console.log(`Неудалось записать файл`);
+      console.log(chalk.red(`Неудалось записать файл`));
       process.exit(ExitCode.ERROR);
     }
   },

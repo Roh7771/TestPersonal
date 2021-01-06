@@ -1,0 +1,42 @@
+extends layout
+
+block content
+  main
+    section.post
+      h1.visually-hidden Пост
+      section.post__content
+        h2.visually-hidden Основное содержание
+        .post__wrapper
+          .post__head
+            a.post__backwards.button.button--backwards(href='#') Назад
+            time.post__date(datetime='2019-03-21T20:33') #{formatDate(article.createdAt)}
+            h2.post__title.title.title--main #{article.title}
+            include partials/categories
+          .post__picture
+            img(src=`/img/${article.picture}`, alt='пейзаж море, скалы, пляж')
+          .post__text
+            p #{article.fullText || article.announce}
+      .post__wrapper.post__wrapper--comments
+        section.post__comments.comments#comments
+          h2.comments__title.title.title--middle Комментарии
+          ul.comments__list
+            each comment in article.comments
+              li.comments__comment
+                .comments__avatar.avatar
+                  img(src=`/img/${comment.user.avatar}`, alt='аватар пользователя')
+                .comments__text
+                  .comments__head
+                    p #{`${comment.user.firstName} ${comment.user.lastName}`} •
+                    time.comments__date(datetime='2019-03-21T20:33') #{formatDate(comment.createdAt)}
+                  p.comments__message #{comment.text}
+          .comments__footer.comments__footer--user
+            form(action=`/articles/${article.id}/comments`, method='POST')
+              .comments__avatar.avatar
+                img(src='/img/avatar-2.png', alt='аватар пользователя')
+              label
+                textarea(name='text', rows='1', placeholder=`${article.comments.length == 0 ? 'Начать обсуждение' : 'Присоединиться к обсуждению'}`) #{prevCommentData ? prevCommentData.text : ''}
+                if (errorDetails)
+                  each error in errorDetails.filter((el) => el.context.key === 'text')
+                    dive(style={color: 'red'}) - #{error.message}
+              button.comments__button.button.button--colored(type='submit') Опубликовать
+  script(src='/js/main.js')

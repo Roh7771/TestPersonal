@@ -4,10 +4,16 @@
   "description": "Типотека",
   "main": "./src/service/service.js",
   "scripts": {
-    "start": "node ./src/service/service.js",
-    "test": "npm run eslint",
+    "start": "cross-env LOG_LEVEL=error node ./src/service/service.js",
+    "start::debug": "cross-env LOG_LEVEL=debug NODE_ENV=development nodemon ./src/service/service.js",
+    "start-rest-server": "cross-env LOG_LEVEL=debug NODE_ENV=development nodemon ./src/service/service.js --server",
+    "start-front-server": "cross-env LOG_LEVEL=debug NODE_ENV=development nodemon ./src/express/index.js",
     "eslint": "eslint --ext .js src/",
-    "server": "nodemon ./src/service/service.js --server"
+    "test": "npm run eslint && npm run test::rest",
+    "test::rest": "jest --testPathPattern=src/service --runInBand",
+    "init-db": "cross-env LOG_LEVEL=debug NODE_ENV=development node ./src/service/cli/server/db/init-db.js",
+    "fill-db": "cross-env LOG_LEVEL=debug NODE_ENV=development node ./src/service/service.js --fill-db 20",
+    "init-and-fill-db": "npm run init-db && npm run fill-db"
   },
   "repository": {
     "type": "git",
@@ -22,9 +28,24 @@
   "devDependencies": {
     "eslint": "7.7.0",
     "eslint-config-htmlacademy": "0.5.2",
-    "nodemon": "2.0.4"
+    "jest": "26.6.1",
+    "nodemon": "2.0.4",
+    "pino-pretty": "4.3.0",
+    "supertest": "5.0.0"
   },
   "dependencies": {
-    "chalk": "4.1.0"
+    "@types/express": "4.17.8",
+    "axios": "0.21.0",
+    "chalk": "4.1.0",
+    "cross-env": "7.0.2",
+    "dotenv": "8.2.0",
+    "express": "4.17.1",
+    "joi": "17.3.0",
+    "multer": "1.4.2",
+    "nanoid": "3.1.13",
+    "pg": "8.5.1",
+    "pino": "6.7.0",
+    "pug": "3.0.0",
+    "sequelize": "6.3.5"
   }
 }
